@@ -5,7 +5,11 @@ import authRoute from "./routes/auth.js";
 import usersRoute from "./routes/users.js";
 import hotelsRoute from "./routes/hotels.js";
 import roomsRoute from "./routes/rooms.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 const app = express();
+const PORT = process.env.PORT || 7000;
+app.use(cors());
 dotenv.config();
 
 const connect = async () => {
@@ -24,6 +28,7 @@ mongoose.connection.on("disconnected", () => {
 });
 
 // middlewares
+app.use(cookieParser());
 app.use(express.json());
 app.use("/api/auth", authRoute);
 app.use("/api/users", usersRoute);
@@ -41,10 +46,22 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.send("hii");
-});
-app.listen(7000, () => {
+// Deployment
+const __dirname1 = path.resolve();
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname1, "../client/build")));
+
+  app.get("*", (req, res) =>
+    res.sendFile(path.resolve(__dirname1, "../client", "build", "index.html"))
+  );
+} else {
+  app.get("/", (req, res) => {
+    res.send("API is running..");
+  });
+}
+// Deployment
+
+app.listen(PORT, () => {
   connect();
-  console.log("Connected To backend.");
+  console.log(`Connected To backend. ${PORT}`);
 });
